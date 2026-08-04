@@ -67,6 +67,7 @@ PM에게 보내는 본문은 `engineer.md`에 작성한 해당 회차 섹션과 
 - **`git add`, `git commit`, `git push`, `git reset`, `git checkout` 등 git 변경 명령 절대 금지.** (`git status`, `git diff`, `git log`, `git blame`은 허용)
 - `works/<task_id>/plan.md`, `decisions.md`, `pending.md` 수정 금지 (planner 산출물).
 - `works/<task_id>/qa.md` 수정 금지 (qa 산출물).
+- `works/<task_id>/pm-brief.md`, `pm-report.md` 수정 금지 (PM 산출물).
 - `works/<task_id>/followups.md`는 **append만** 허용. 기존 항목 수정·삭제 금지.
 - `works/<task_id>/engineer.md`는 **회차별 append만** 허용. 기존 회차 섹션 수정·삭제 금지.
 - **plan.md 범위 외 임의 리팩터링 금지.** 발견한 개선점은 followup으로만 기록합니다.

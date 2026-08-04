@@ -58,12 +58,14 @@ engineer는 구현 후, qa는 검증 시 아래 표에서 **필수 = 예**인 �
 
 | 파일 | 작성자 | 갱신 방식 |
 |---|---|---|
+| `pm-brief.md` | pm (착수 시, 사용자 확인 대상) | 덮어쓰기 |
 | `pending.md` | planner (Phase 1) | 덮어쓰기 |
 | `plan.md` | planner (Phase 2) | 덮어쓰기 |
 | `decisions.md` | planner (Phase 2) | 덮어쓰기 |
 | `engineer.md` | engineer | 회차별 append |
 | `qa.md` | qa | 회차마다 덮어쓰기 |
 | `followups.md` | planner 최초 작성, engineer·qa append | append only |
+| `pm-report.md` | pm (완료 시) | 덮어쓰기 |
 
 - `works/`를 git에 커밋할지: <커밋함 / 커밋하지 않음(.gitignore에 추가)>
 

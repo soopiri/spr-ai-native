@@ -195,6 +195,57 @@ describe('cursor 생성물', () => {
   });
 });
 
+describe('PM 산출물 계약', () => {
+  it('pm 진입점에 브리프 게이트와 완료 보고가 정의되어 있다', () => {
+    const entrypoints = {
+      claude: '.claude/commands/pm.md',
+      codex: '.codex/skills/pm/SKILL.md',
+      cursor: '.cursor/commands/pm.md',
+    };
+    for (const [target, file] of Object.entries(entrypoints)) {
+      const { cwd } = generate(target);
+      const body = readFileSync(join(cwd, file), 'utf8');
+      assert.ok(body.includes('pm-brief.md'), `${target}: pm-brief.md 누락`);
+      assert.ok(body.includes('pm-report.md'), `${target}: pm-report.md 누락`);
+      assert.ok(body.includes('범위: 제외'), `${target}: 범위 제외 지시 누락`);
+      assert.ok(
+        body.includes('brief 확인 게이트 생략 금지'),
+        `${target}: 브리프 게이트 금지 조항 누락`
+      );
+      assert.ok(body.includes('미완료(에스컬레이션)'), `${target}: 에스컬레이션 판정 누락`);
+    }
+  });
+
+  it('planner가 pm-brief.md를 유일한 작업 정의 근거로 읽는다', () => {
+    const { cwd } = generate('claude');
+    const body = readFileSync(join(cwd, '.claude/agents/planner.md'), 'utf8');
+    assert.ok(body.includes('pm-brief.md'));
+    assert.ok(body.includes('"범위: 제외" 항목을 계획에 넣지 마세요'));
+  });
+
+  it('engineer / qa는 PM 산출물 수정이 금지된다', () => {
+    const { cwd } = generate('claude');
+    for (const role of ['engineer', 'qa']) {
+      const body = readFileSync(join(cwd, '.claude/agents', `${role}.md`), 'utf8');
+      assert.ok(body.includes('pm-brief.md'), `${role}: pm-brief.md 금지 조항 누락`);
+      assert.ok(body.includes('pm-report.md'), `${role}: pm-report.md 금지 조항 누락`);
+    }
+  });
+
+  it('프로젝트 지침 §5 산출물 표에 PM 파일 2개가 있다', () => {
+    for (const [target, file] of Object.entries({
+      claude: 'CLAUDE.md',
+      codex: 'AGENTS.md',
+      cursor: '.cursor/rules/10-project.mdc',
+    })) {
+      const { cwd } = generate(target);
+      const doc = readFileSync(join(cwd, file), 'utf8');
+      assert.ok(doc.includes('`pm-brief.md`'), `${target}: pm-brief.md 행 누락`);
+      assert.ok(doc.includes('`pm-report.md`'), `${target}: pm-report.md 행 누락`);
+    }
+  });
+});
+
 describe('기존 파일 처리', () => {
   it('기본 동작은 건너뛰기이며 내용이 보존된다', () => {
     const { cwd, home } = sandbox();

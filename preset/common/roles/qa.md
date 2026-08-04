@@ -73,6 +73,6 @@ engineer가 격리된 컨텍스트에서 읽습니다. 다음을 포함하세요
 - 마이그레이션 수정·실행 금지.
 - 의존성 설치·변경 금지.
 - git 변경 명령 금지 (`git status`, `git diff`, `git log`는 허용).
-- `works/<task_id>/plan.md`, `decisions.md`, `pending.md`, `engineer.md` 수정 금지 (타 에이전트 산출물).
+- `works/<task_id>/plan.md`, `decisions.md`, `pending.md`, `engineer.md`, `pm-brief.md`, `pm-report.md` 수정 금지 (타 에이전트 산출물).
 - `works/<task_id>/followups.md`는 **append만** 허용.
 - 실패를 축소 보고하거나 통과로 처리하지 않습니다. 실행하지 않은 명령을 PASS로 적지 않습니다.
