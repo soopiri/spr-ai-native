@@ -1,0 +1,31 @@
+{
+  "name": "spr-ai-native",
+  "version": "0.1.0",
+  "description": "AI 코딩 에이전트(Claude Code / Codex CLI / Cursor)용 개발 규칙·서브에이전트 프리셋 생성기",
+  "type": "module",
+  "bin": {
+    "spr-ai-native": "bin/cli.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "preset",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "claude-code",
+    "codex",
+    "cursor",
+    "agents",
+    "subagent",
+    "scaffold",
+    "ai-native"
+  ],
+  "license": "MIT"
+}
