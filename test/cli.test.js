@@ -246,6 +246,136 @@ describe('PM 산출물 계약', () => {
   });
 });
 
+describe('QA 판정 계약', () => {
+  it('전부 N/A일 때 PASS가 아니라 PARTIAL이라고 명시한다', () => {
+    for (const [target, file] of Object.entries({
+      claude: '.claude/agents/qa.md',
+      codex: '.codex/agents/qa.toml',
+      cursor: '.cursor/agents/qa.md',
+    })) {
+      const { cwd } = generate(target);
+      const body = readFileSync(join(cwd, file), 'utf8');
+      assert.ok(body.includes('N/A 처리 규칙'), `${target}: N/A 처리 규칙 누락`);
+      assert.ok(
+        body.includes('전부 N/A) 판정은 PARTIAL입니다'),
+        `${target}: 전부 N/A → PARTIAL 규칙 누락`
+      );
+    }
+  });
+});
+
+describe('작업 예산', () => {
+  it('프로젝트 지침 §5에 예산 표와 기본값이 있다', () => {
+    for (const [target, file] of Object.entries({
+      claude: 'CLAUDE.md',
+      codex: 'AGENTS.md',
+      cursor: '.cursor/rules/10-project.mdc',
+    })) {
+      const { cwd } = generate(target);
+      const doc = readFileSync(join(cwd, file), 'utf8');
+      assert.ok(doc.includes('### 작업 예산'), `${target}: 작업 예산 절 누락`);
+      assert.ok(doc.includes('| QA fix 재시도 횟수 | 3 |'), `${target}: fix 기본값 누락`);
+      assert.ok(doc.includes('| 계획 단계 | 분리 |'), `${target}: 계획 단계 기본값 누락`);
+    }
+  });
+
+  it('pm 진입점이 예산을 읽고 통합 모드를 분기한다', () => {
+    for (const [target, file] of Object.entries({
+      claude: '.claude/commands/pm.md',
+      codex: '.codex/skills/pm/SKILL.md',
+      cursor: '.cursor/commands/pm.md',
+    })) {
+      const { cwd } = generate(target);
+      const body = readFileSync(join(cwd, file), 'utf8');
+      assert.ok(body.includes('작업 예산 확인'), `${target}: 예산 확인 단계 누락`);
+      assert.ok(body.includes('Phase 1+2 (통합)'), `${target}: 통합 모드 분기 누락`);
+      assert.ok(body.includes('계획 단계 = 분리 (기본)'), `${target}: 분리 모드 분기 누락`);
+    }
+  });
+
+  it('planner가 통합 모드를 처리하고 권장안임을 표기한다', () => {
+    const { cwd } = generate('claude');
+    const body = readFileSync(join(cwd, '.claude/agents/planner.md'), 'utf8');
+    assert.ok(body.includes('## Phase 1+2: 통합'));
+    assert.ok(body.includes('(권장안 — 사용자 미확인)'));
+  });
+
+  it('fix 재시도 횟수가 어디에도 하드코딩되어 있지 않다', () => {
+    const { cwd } = generate('claude');
+    for (const file of listFiles(cwd)) {
+      const content = readFileSync(join(cwd, file), 'utf8');
+      assert.ok(!/회차 <N>\/3\b/.test(content), `${file}에 회차 상한이 하드코딩되어 있습니다`);
+      assert.ok(!content.includes('fix 3회'), `${file}에 "fix 3회"가 하드코딩되어 있습니다`);
+    }
+  });
+});
+
+describe('알려진 약점', () => {
+  it('pm 완료 보고에 약점 섹션과 인용 규칙이 있다', () => {
+    for (const [target, file] of Object.entries({
+      claude: '.claude/commands/pm.md',
+      codex: '.codex/skills/pm/SKILL.md',
+      cursor: '.cursor/commands/pm.md',
+    })) {
+      const { cwd } = generate(target);
+      const body = readFileSync(join(cwd, file), 'utf8');
+      assert.ok(body.includes('## 알려진 약점'), `${target}: 약점 섹션 누락`);
+      assert.ok(body.includes('추측이 아니라 인용'), `${target}: 인용 규칙 누락`);
+      assert.ok(body.includes('약점을 숨기지 않습니다'), `${target}: 핵심 원칙 누락`);
+    }
+  });
+
+  it('engineer가 재현 조건이 있는 약점만 보고한다', () => {
+    const { cwd } = generate('claude');
+    const body = readFileSync(join(cwd, '.claude/agents/engineer.md'), 'utf8');
+    assert.ok(body.includes('### 알려진 약점'));
+    assert.ok(body.includes('재현 조건을 적을 수 없으면 약점이 아니라 추측입니다'));
+  });
+});
+
+describe('README 산출 책임', () => {
+  it('engineer가 실행 방법을 쓰되 조건부이며 기존 내용을 보존한다', () => {
+    const { cwd } = generate('claude');
+    const body = readFileSync(join(cwd, '.claude/agents/engineer.md'), 'utf8');
+    assert.ok(body.includes('README 실행 방법 갱신'));
+    assert.ok(body.includes('사용자에게 보이는 변화가 있을 때만'), '갱신 조건 누락');
+    assert.ok(body.includes('실행 방법에 해당하는 섹션만'), '부분 갱신 규칙 누락');
+    assert.ok(body.includes('이름과 예시값만'), '환경변수 규칙 누락');
+  });
+
+  it('pm이 README를 쓸 수 있되 실행 방법은 못 건드린다', () => {
+    for (const [target, file] of Object.entries({
+      claude: '.claude/commands/pm.md',
+      codex: '.codex/skills/pm/SKILL.md',
+      cursor: '.cursor/commands/pm.md',
+    })) {
+      const { cwd } = generate(target);
+      const body = readFileSync(join(cwd, file), 'utf8');
+      assert.ok(body.includes('### README 정리'), `${target}: README 정리 단계 누락`);
+      assert.ok(
+        body.includes('`pm-brief.md`, `pm-report.md`, `README.md` 외의 파일 작성 금지'),
+        `${target}: README 작성 허용 누락`
+      );
+      assert.ok(
+        body.includes('README의 실행 방법 섹션 수정 금지'),
+        `${target}: 실행 방법 보호 조항 누락`
+      );
+    }
+  });
+
+  it('프로젝트 지침 §5에 README 작성자가 명시된다', () => {
+    for (const [target, file] of Object.entries({
+      claude: 'CLAUDE.md',
+      codex: 'AGENTS.md',
+      cursor: '.cursor/rules/10-project.mdc',
+    })) {
+      const { cwd } = generate(target);
+      const doc = readFileSync(join(cwd, file), 'utf8');
+      assert.ok(doc.includes('| `README.md` | engineer(실행 방법) → pm('), `${target}: README 행 누락`);
+    }
+  });
+});
+
 describe('기존 파일 처리', () => {
   it('기본 동작은 건너뛰기이며 내용이 보존된다', () => {
     const { cwd, home } = sandbox();
