@@ -264,8 +264,8 @@ describe('QA 판정 계약', () => {
   });
 });
 
-describe('작업 예산', () => {
-  it('프로젝트 지침 §5에 예산 표와 기본값이 있다', () => {
+describe('작업 예산 제거', () => {
+  it('프로젝트 지침 §5에 예산 표가 없다', () => {
     for (const [target, file] of Object.entries({
       claude: 'CLAUDE.md',
       codex: 'AGENTS.md',
@@ -273,13 +273,29 @@ describe('작업 예산', () => {
     })) {
       const { cwd } = generate(target);
       const doc = readFileSync(join(cwd, file), 'utf8');
-      assert.ok(doc.includes('### 작업 예산'), `${target}: 작업 예산 절 누락`);
-      assert.ok(doc.includes('| QA fix 재시도 횟수 | 3 |'), `${target}: fix 기본값 누락`);
-      assert.ok(doc.includes('| 계획 단계 | 분리 |'), `${target}: 계획 단계 기본값 누락`);
+      assert.ok(!doc.includes('작업 예산'), `${target}: 작업 예산 절이 남아 있습니다`);
+      assert.ok(!doc.includes('QA fix 재시도 횟수'), `${target}: fix 재시도 항목이 남아 있습니다`);
     }
   });
 
-  it('pm 진입점이 예산을 읽고 통합 모드를 분기한다', () => {
+  it('통합 계획 모드가 어디에도 없다', () => {
+    const { cwd } = generate('claude');
+    for (const file of listFiles(cwd)) {
+      const content = readFileSync(join(cwd, file), 'utf8');
+      assert.ok(!content.includes('Phase 1+2'), `${file}에 통합 모드가 남아 있습니다`);
+      assert.ok(!content.includes('계획 단계 ='), `${file}에 계획 단계 노브가 남아 있습니다`);
+      assert.ok(!content.includes('작업 예산'), `${file}에 작업 예산 참조가 남아 있습니다`);
+    }
+  });
+
+  it('planner의 입력 분기가 Phase 1 / Phase 2 둘뿐이다', () => {
+    const { cwd } = generate('claude');
+    const body = readFileSync(join(cwd, '.claude/agents/planner.md'), 'utf8');
+    assert.ok(body.includes('`Phase 1` / `Phase 2` 중 하나가 명시됩니다'));
+    assert.ok(!body.includes('(권장안 — 사용자 미확인)'));
+  });
+
+  it('pm이 fix 상한을 3으로 고정하고 양쪽 호출 횟수를 밝힌다', () => {
     for (const [target, file] of Object.entries({
       claude: '.claude/commands/pm.md',
       codex: '.codex/skills/pm/SKILL.md',
@@ -287,26 +303,18 @@ describe('작업 예산', () => {
     })) {
       const { cwd } = generate(target);
       const body = readFileSync(join(cwd, file), 'utf8');
-      assert.ok(body.includes('작업 예산 확인'), `${target}: 예산 확인 단계 누락`);
-      assert.ok(body.includes('Phase 1+2 (통합)'), `${target}: 통합 모드 분기 누락`);
-      assert.ok(body.includes('계획 단계 = 분리 (기본)'), `${target}: 분리 모드 분기 누락`);
+      assert.ok(body.includes('engineer fix 재호출은 **최대 3회**'), `${target}: fix 상한 고정 문구 누락`);
+      assert.ok(body.includes('engineer 호출은 최대 4회'), `${target}: engineer 호출 횟수 누락`);
+      assert.ok(body.includes('qa 호출도 최대 4회'), `${target}: qa 호출 횟수 누락`);
+      assert.ok(!body.includes('<F>'), `${target}: <F> 플레이스홀더가 남아 있습니다`);
     }
   });
 
-  it('planner가 통합 모드를 처리하고 권장안임을 표기한다', () => {
+  it('qa 보고 형식이 전달받지 않는 <최대>를 요구하지 않는다', () => {
     const { cwd } = generate('claude');
-    const body = readFileSync(join(cwd, '.claude/agents/planner.md'), 'utf8');
-    assert.ok(body.includes('## Phase 1+2: 통합'));
-    assert.ok(body.includes('(권장안 — 사용자 미확인)'));
-  });
-
-  it('fix 재시도 횟수가 어디에도 하드코딩되어 있지 않다', () => {
-    const { cwd } = generate('claude');
-    for (const file of listFiles(cwd)) {
-      const content = readFileSync(join(cwd, file), 'utf8');
-      assert.ok(!/회차 <N>\/3\b/.test(content), `${file}에 회차 상한이 하드코딩되어 있습니다`);
-      assert.ok(!content.includes('fix 3회'), `${file}에 "fix 3회"가 하드코딩되어 있습니다`);
-    }
+    const body = readFileSync(join(cwd, '.claude/agents/qa.md'), 'utf8');
+    assert.ok(body.includes('## QA 결과: <task_id> (회차 <N>)'));
+    assert.ok(!body.includes('<N>/<최대>'), 'qa가 받지 않는 <최대>를 출력하도록 요구합니다');
   });
 });
 

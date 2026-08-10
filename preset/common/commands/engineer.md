@@ -13,7 +13,7 @@ argument-hint: <task_id> [fix]
 - `task_id` — 입력의 첫 토큰. **없으면 사용자에게 먼저 요청합니다.** 임의로 정하지 마세요.
 - 모드 판단:
   - **신규 구현** — `works/<task_id>/plan.md` 경로와 `decisions.md` 경로를 전달합니다. `plan.md`가 없으면 위임하지 말고 planner를 먼저 실행하라고 사용자에게 안내합니다.
-  - **QA Fix** — 입력에 `fix`가 있거나 `works/<task_id>/qa.md`가 FAIL/PARTIAL이면, `qa.md` 경로와 회차(`<N>/<최대>`)를 전달합니다. 최대 횟수는 프로젝트 지침 §5 작업 예산의 **QA fix 재시도 횟수**(기본 3)입니다. 회차는 `engineer.md`의 기존 회차 섹션 수를 보고 계산합니다.
+  - **QA Fix** — 입력에 `fix`가 있거나 `works/<task_id>/qa.md`가 FAIL/PARTIAL이면, `qa.md` 경로와 회차(`<N>/3`)를 전달합니다. 회차는 `engineer.md`의 기존 회차 섹션 수를 보고 계산합니다.
 - 다음 지시를 함께 전달합니다: 구현 보고를 `works/<task_id>/engineer.md`에 회차별 append, **git 커밋/푸시 금지**.
 
 ## 이후 처리

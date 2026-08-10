@@ -64,7 +64,7 @@ engineer가 격리된 컨텍스트에서 읽습니다. 다음을 포함하세요
 ## 보고 형식 (PM에게)
 
 ```
-## QA 결과: <task_id> (회차 <N>/<최대>)
+## QA 결과: <task_id> (회차 <N>)
 
 - **종합**: PASS / FAIL / PARTIAL
 - 검증 항목: <X> PASS / <Y> FAIL / <Z> N/A
