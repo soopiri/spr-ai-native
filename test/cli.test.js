@@ -370,12 +370,30 @@ describe('검증 항목 계약', () => {
     assert.ok(doc.includes('N/A(환경 미비)'), '환경 미비 처리 누락');
   });
 
+  it('§4가 테스트 · 정적 검사 · engineer 전용으로 나뉜다', () => {
+    for (const [target, file] of Object.entries({
+      claude: 'CLAUDE.md',
+      codex: 'AGENTS.md',
+      cursor: '.cursor/rules/10-project.mdc',
+    })) {
+      const { cwd } = generate(target);
+      const doc = readFileSync(join(cwd, file), 'utf8');
+      assert.ok(doc.includes('### 테스트'), `${target}: 테스트 표 누락`);
+      assert.ok(doc.includes('### 정적 검사'), `${target}: 정적 검사 표 누락`);
+      assert.ok(doc.includes('### engineer 전용 명령'), `${target}: engineer 전용 표 누락`);
+      assert.ok(
+        !doc.includes('| 단일 테스트 실행 | — |'),
+        `${target}: 단일 테스트 실행이 판정 표에 남아 있습니다`
+      );
+    }
+  });
+
   it('engineer는 표에 되쓰고 qa는 되쓰지 않는다', () => {
     const { cwd } = generate('claude');
     const engineer = readFileSync(join(cwd, '.claude/agents/engineer.md'), 'utf8');
     const qa = readFileSync(join(cwd, '.claude/agents/qa.md'), 'utf8');
-    assert.ok(engineer.includes('찾은 명령을 §4 표에 적어 넣습니다'), 'engineer 역기입 누락');
-    assert.ok(qa.includes('§4 표를 직접 고치지 않습니다'), 'qa 되쓰기 금지 누락');
+    assert.ok(engineer.includes('찾은 명령을 §4의 해당 표에 적어 넣습니다'), 'engineer 역기입 누락');
+    assert.ok(qa.includes('§4의 표를 직접 고치지 않습니다'), 'qa 되쓰기 금지 누락');
     for (const body of [engineer, qa]) {
       assert.ok(body.includes('N/A(환경 미비)'), '환경 미비 규칙 누락');
     }
