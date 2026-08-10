@@ -38,7 +38,7 @@ export function apply({ writer, cwd, useGlobal }) {
   writer.write(
     join(cwd, '.cursor', 'rules', '10-project.mdc'),
     `${frontmatter([
-      ['description', quoted('프로젝트 개요 · 기술 스택 · 검증 명령 · 산출물 규약')],
+      ['description', quoted('프로젝트 개요 · 기술 스택 · 검증 항목 · 산출물 규약')],
       ['alwaysApply', 'true'],
     ])}\n${readPreset('project-doc.md').trim()}\n`
   );

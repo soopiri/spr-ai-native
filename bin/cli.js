@@ -111,7 +111,7 @@ function main(argv) {
 
   console.log('\n다음 단계');
   console.log(
-    `  1. 프로젝트 지침 문서의 플레이스홀더(<...>)를 채우세요. 특히 §4 검증 명령은 engineer/qa가 그대로 실행합니다.`
+    `  1. 프로젝트 지침 문서의 플레이스홀더(<...>)를 채우세요. §4 검증 항목의 명령 칸은 비워두면 에이전트가 찾아 채웁니다.`
   );
   for (const [i, note] of notes.entries()) console.log(`  ${i + 2}. ${note}`);
 }

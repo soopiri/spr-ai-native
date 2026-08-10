@@ -118,10 +118,10 @@ describe('claude frontmatter', () => {
     }
   });
 
-  it('프로젝트 문서에 §4 검증 명령과 §9 공통 행동 지침이 있다', () => {
+  it('프로젝트 문서에 §4 검증 항목과 §9 공통 행동 지침이 있다', () => {
     const { cwd } = generate('claude');
     const doc = readFileSync(join(cwd, 'CLAUDE.md'), 'utf8');
-    assert.ok(doc.includes('## 4. 검증 명령'));
+    assert.ok(doc.includes('## 4. 검증 항목'));
     assert.ok(doc.includes('## 9. 공통 행동 지침'));
     assert.ok(doc.includes('단순함이 먼저입니다'));
   });
@@ -333,6 +333,47 @@ describe('알려진 약점', () => {
   });
 });
 
+describe('검증 항목 계약', () => {
+  it('§4가 항목·실행 축이며 스택 종속 예시가 없다', () => {
+    for (const [target, file] of Object.entries({
+      claude: 'CLAUDE.md',
+      codex: 'AGENTS.md',
+      cursor: '.cursor/rules/10-project.mdc',
+    })) {
+      const { cwd } = generate(target);
+      const doc = readFileSync(join(cwd, file), 'utf8');
+      const section4 = doc.slice(doc.indexOf('## 4. 검증 항목'), doc.indexOf('## 5.'));
+      assert.ok(section4.includes('| 린트 | 필수 | |'), `${target}: 항목 표 누락`);
+      assert.ok(section4.includes('| 포맷 검사 | 안 함 | |'), `${target}: 안 함 값 누락`);
+      assert.ok(section4.includes('### 명령을 찾는 방법'), `${target}: 발견 프로토콜 누락`);
+      // §4는 특정 패키지 매니저·도구 이름을 전제하지 않아야 한다 (§2 기술 스택은 예외)
+      for (const term of ['pnpm', 'npm run', 'pytest', 'yarn']) {
+        assert.ok(!section4.includes(term), `${target}: §4에 스택 종속 예시(${term})가 남아 있습니다`);
+      }
+    }
+  });
+
+  it('발견 안전장치 3개가 프로젝트 문서에 있다', () => {
+    const { cwd } = generate('claude');
+    const doc = readFileSync(join(cwd, 'CLAUDE.md'), 'utf8');
+    assert.ok(doc.includes('근거가 없으면 실행하지 않습니다'), '추측 금지 누락');
+    assert.ok(doc.includes('끝나지 않는 명령(감시 모드)'), '감시 모드 금지 누락');
+    assert.ok(doc.includes('코드를 자동 수정하는 옵션'), '자동 수정 금지 누락');
+    assert.ok(doc.includes('N/A(환경 미비)'), '환경 미비 처리 누락');
+  });
+
+  it('engineer는 표에 되쓰고 qa는 되쓰지 않는다', () => {
+    const { cwd } = generate('claude');
+    const engineer = readFileSync(join(cwd, '.claude/agents/engineer.md'), 'utf8');
+    const qa = readFileSync(join(cwd, '.claude/agents/qa.md'), 'utf8');
+    assert.ok(engineer.includes('찾은 명령을 §4 표에 적어 넣습니다'), 'engineer 역기입 누락');
+    assert.ok(qa.includes('§4 표를 직접 고치지 않습니다'), 'qa 되쓰기 금지 누락');
+    for (const body of [engineer, qa]) {
+      assert.ok(body.includes('N/A(환경 미비)'), '환경 미비 규칙 누락');
+    }
+  });
+});
+
 describe('README 산출 책임', () => {
   it('engineer가 실행 방법을 쓰되 조건부이며 기존 내용을 보존한다', () => {
     const { cwd } = generate('claude');
@@ -394,7 +435,7 @@ describe('기존 파일 처리', () => {
 
     const doc = results.find((r) => r.path === join(cwd, 'CLAUDE.md'));
     assert.equal(doc.status, 'overwritten');
-    assert.ok(readFileSync(join(cwd, 'CLAUDE.md'), 'utf8').includes('## 4. 검증 명령'));
+    assert.ok(readFileSync(join(cwd, 'CLAUDE.md'), 'utf8').includes('## 4. 검증 항목'));
   });
 });
 
@@ -417,7 +458,7 @@ describe('--global 설치', () => {
     const { cwd, home } = generate('claude', { useGlobal: true });
     const globalDoc = readFileSync(join(home, '.claude', 'CLAUDE.md'), 'utf8');
     assert.ok(globalDoc.includes('단순함이 먼저입니다'));
-    assert.ok(!globalDoc.includes('## 4. 검증 명령'));
+    assert.ok(!globalDoc.includes('## 4. 검증 항목'));
 
     const projectDoc = readFileSync(join(cwd, 'CLAUDE.md'), 'utf8');
     assert.ok(projectDoc.includes('~/.claude/CLAUDE.md'));
